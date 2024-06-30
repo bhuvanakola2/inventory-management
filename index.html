@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventory Management</title>
+</head>
+<body>
+  <h1>Inventory Management</h1>
+  <form id="addProductForm">
+    <input type="text" id="name" placeholder="Product Name" required>
+    <input type="number" id="quantity" placeholder="Quantity" required>
+    <input type="number" step="0.01" id="price" placeholder="Price" required>
+    <button type="submit">Add Product</button>
+  </form>
+  <h2>Products</h2>
+  <ul id="productList"></ul>
+
+  <script>
+    document.getElementById('addProductForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const quantity = document.getElementById('quantity').value;
+      const price = document.getElementById('price').value;
+
+      const response = await fetch('/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, quantity, price })
+      });
+
+      if (response.ok) {
+        alert('Product added successfully!');
+        loadProducts();
+      } else {
+        alert('Error adding product');
+      }
+    });
+
+    async function loadProducts() {
+      const response = await fetch('/products');
+      const xmlText = await response.text();
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+      const products = xmlDoc.getElementsByTagName('product');
+      const productList = document.getElementById('productList');
+      productList.innerHTML = '';
+
+      Array.from(products).forEach(product => {
+        const name = product.getElementsByTagName('name')[0].textContent;
+        const quantity = product.getElementsByTagName('quantity')[0].textContent;
+        const price = product.getElementsByTagName('price')[0].textContent;
+        const li = document.createElement('li');
+        li.textContent = `${name} - Quantity: ${quantity}, Price: $${price}`;
+        productList.appendChild(li);
+      });
+    }
+
+    loadProducts();
+  </script>
+</body>
+</html>
